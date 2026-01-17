@@ -1,147 +1,115 @@
-# AS Framework
+# AS-Core
 
-A modern, optimized FiveM framework built with ox_lib integration.
+**AS Framework Core** - The foundation of the AS server framework for FiveM.
 
 ## Features
 
-- 🚀 **Optimized Performance** - Built with ox_lib for maximum efficiency
-- 💾 **Database Integration** - Full oxmysql support with auto-save
-- 👤 **Player Management** - Complete player data handling and persistence
-- 💰 **Money System** - Multi-account money system (cash, bank)
-- 💼 **Job System** - Flexible job and grade management
-- 🎮 **Multi-Character Support** - Ready for character selection
-- 📊 **Metadata System** - Extensible player metadata
-- 🔧 **Developer Friendly** - Clean API and easy to extend
-
-## Dependencies
-
-Required resources:
-- [ox_lib](https://github.com/overextended/ox_lib)
-- [oxmysql](https://github.com/overextended/oxmysql)
+- **Player Management** - Complete player data handling with automatic database integration
+- **Money System** - Multiple account types (cash, bank) with transaction support
+- **Job System** - Job management with grades and permissions
+- **Callback System** - ox_lib based server/client callbacks
+- **Optimized** - Built with ox_lib and oxmysql for performance
+- **Auto-save** - Automatic player data persistence every 5 minutes
+- **Centralized Config** - All framework settings in convars.cfg
 
 ## Installation
 
-1. Download and extract `as-core` to your resources folder
-2. Add `ensure as-core` to your server.cfg (after ox_lib and oxmysql)
-3. Import `database.sql` to your database
-4. Configure `shared/config.lua` to your preferences
-5. Restart your server
+1. Add `as-core` to your resources folder
+2. Import `database.sql` into your MySQL database
+3. Add to `server.cfg`:
+   ```cfg
+   ensure oxmysql
+   ensure ox_lib
+   ensure as-core
+   
+   # Load centralized configuration
+   exec @as-core/convars.cfg
+   ```
 
 ## Configuration
 
-Edit `shared/config.lua` to customize:
-- Default money amounts
-- Job settings
-- Player settings
-- Database options
-- And more...
+All settings are managed through `convars.cfg`. Key settings:
+
+```cfg
+# Debug mode
+set as_core_debug 0
+
+# Default spawn location
+set as_default_spawn_x -269.4
+set as_default_spawn_y -955.3
+set as_default_spawn_z 31.2
+set as_default_spawn_h 206.0
+
+# Enable target system
+set as_use_target 1
+```
 
 ## Usage
 
-### Server-side
+### Get Core Object
 
 ```lua
--- Get the core object
 local AS = exports['as-core']:GetCoreObject()
+```
 
--- Get a player
+### Server-Side Functions
+
+```lua
+-- Get player object
 local player = AS.Server.GetPlayer(source)
 
--- Player functions
-player.addMoney('cash', 1000)
-player.removeMoney('bank', 500)
-player.setJob('police', 2)
-player.setMeta('hunger', 100)
-player.save()
+-- Player money
+local cash = player.getMoney('cash')
+player.addMoney('bank', 1000)
+player.removeMoney('cash', 500)
 
--- Register callbacks
-AS.Server.RegisterCallback('myCallback', function(source, cb, data)
-    cb({success = true})
+-- Player job
+local job = player.getJob()
+player.setJob('police', 2)
+
+-- Player data
+local identifier = player.getIdentifier()
+local name = player.getName()
+```
+
+### Callbacks
+
+```lua
+-- Server callback
+AS.Server.RegisterCallback('as-core:getData', function(source, cb)
+    cb({data = 'example'})
+end)
+
+-- Client trigger
+AS.Client.TriggerCallback('as-core:getData', function(data)
+    print(data.data)
 end)
 ```
 
-### Client-side
+## Ace Permissions
 
-```lua
--- Get the core object
-local AS = exports['as-core']:GetCoreObject()
+Add admins to `convars.cfg`:
 
--- Get player data
-local playerData = AS.Client.GetPlayerData()
+```cfg
+# Admin permissions
+add_principal identifier.license:YOUR_LICENSE group.admin
 
--- Check if loaded
-if AS.Client.IsPlayerLoaded() then
-    print('Player is loaded!')
-end
-
--- Use ox_lib helpers
-exports['as-core']:ShowNotification({
-    title = 'Success',
-    description = 'Action completed',
-    type = 'success'
-})
-
--- Progress bar
-local success = exports['as-core']:ShowProgress({
-    duration = 5000,
-    label = 'Doing something...',
-    useWhileDead = false,
-    canCancel = true,
-    disable = {
-        move = true,
-        car = true,
-        combat = true
-    }
-})
+# Superadmin permissions
+add_principal identifier.license:YOUR_LICENSE group.superadmin
 ```
 
-## Events
+## Dependencies
 
-### Server Events
-- `as-core:server:onPlayerLoaded` - When player loads
-- `as-core:server:loadPlayer` - Trigger to load player
-- `as-core:server:updatePlayerData` - Update player data
-- `as-core:server:updateCoords` - Update player position
+- [oxmysql](https://github.com/overextended/oxmysql)
+- [ox_lib](https://github.com/overextended/ox_lib)
 
-### Client Events
-- `as-core:client:onPlayerLoaded` - When player loads
-- `as-core:client:playerLoaded` - Receive player data
-- `as-core:client:onMoneyChange` - Money changed
-- `as-core:client:onJobUpdate` - Job changed
-- `as-core:client:onMetadataUpdate` - Metadata changed
+## Support
 
-## Commands
+For issues or questions, please create an issue on GitHub.
 
-- `/saveall` - Save all player data (admin only)
-- `/getplayers` - Get online player count (admin only)
+## License
 
-## API Reference
-
-### Server-side Functions
-
-| Function | Description |
-|----------|-------------|
-| `AS.Server.GetPlayer(source)` | Get player by source |
-| `AS.Server.GetPlayerByIdentifier(identifier)` | Get player by identifier |
-| `AS.Server.GetPlayers()` | Get all players |
-| `AS.Server.SaveAllPlayers()` | Save all players |
-| `AS.Server.RegisterCallback(name, cb)` | Register callback |
-
-### Player Object Functions
-
-| Function | Description |
-|----------|-------------|
-| `player.addMoney(account, amount)` | Add money |
-| `player.removeMoney(account, amount)` | Remove money |
-| `player.setMoney(account, amount)` | Set money |
-| `player.getMoney(account)` | Get money |
-| `player.setJob(job, grade)` | Set job |
-| `player.getJob()` | Get job |
-| `player.setGroup(group)` | Set permission group |
-| `player.getGroup()` | Get permission group |
-| `player.setMeta(key, value)` | Set metadata |
-| `player.getMeta(key)` | Get metadata |
-| `player.setCoords(coords)` | Set position |
+MIT License - See LICENSE file for details
 | `player.getCoords()` | Get position |
 | `player.save()` | Save player |
 | `player.showNotification(data)` | Show notification |
